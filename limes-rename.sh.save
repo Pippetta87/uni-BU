@@ -1,0 +1,2 @@
+for i in $( ls /home/salvicio/Documents/Limes/decrypted/*.pdf); do 
+name=$(pdfgrep --page-range=1-10 --regexp='(SOMMARIO) n. [0-9]+/[0-9]+'  | grep -Po "([A-Z]+)*[0-9]+(\/)[0-9]+" | sed 's/\//-/g')
