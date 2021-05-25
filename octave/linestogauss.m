@@ -60,22 +60,7 @@ endif
 %closereq()
 peak=1
 onefit="gauss2points"
-max1=find(max(obscuttwo)-0.2<=obscuttwo);
-plateau=max1(find(abs(find(obscuttwo==max(obscuttwo))-max1)<=10));
-global M=median(plateau);
-alpha=find(diff(obscuttwo(M:-1:1))>=0)(1)
-beta=find(diff(obscuttwo(M:end))>=0)(1)
-global xd;
-global yd;
-xd(1)=plateau(1)
-xd(2)=xd(1)-1;
-xd(3)=xd(2)-1;
-#xd(2)=-find(obscuttwo(M-alpha:M+beta)<=0.95*max(obscuttwo))(1)+M-alpha
-#xd(3)=-find(obscuttwo(M-alpha:M+beta)<=0.85*max(obscuttwo))(1)+M-alpha
-yd(1)=obscuttwo(xd(1))
-yd(2)=obscuttwo(xd(2))
-yd(3)=obscuttwo(xd(3))
-auxleft=xd(1)
+
 %%%
 difference=diff(obscuttwo);%derivata discreta del taglio a meta'
 auxsmooth=find(abs(difference)<200);
@@ -94,10 +79,10 @@ auxcut=find(obscuttwo>mean(obscuttwo));
 auxextr=auxs(ismember(auxs,auxcut));
 auxw=2;
 auxidxlr=ones(auxw*2+1,length(auxextr)).*auxextr'+[-auxw:auxw]';
-auxflat=0
-lp=1
-l=0
-while (auxflat<=4)&&(lp>l)
+auxflat=0;
+lp=1;
+l=0;
+while (auxflat+1<=4)&&(lp>l)
 auxmax=ones(auxw*2+1,length(auxextr)).*obscuttwo(auxextr)'+auxflat>=obscuttwo(auxidxlr);
 auxpeak=auxextr(find(sum(auxmax)>=2*auxw));
 l=length(auxpeak)
@@ -107,39 +92,68 @@ lp=length(auxpeak)
 auxflat+=1
 endwhile
 plot(auxpeak,10000*ones(length(auxpeak),1),'*')
-
-plot(difference)
+%plot(difference)
 hold on
-plot(diffth,ones(length(diffth),1),'.')
-plot(segno)
+%plot(diffth,ones(length(diffth),1),'.')
+%plot(segno)
 
 %%%
+%peaklmax=max(obscuttwo([auxleft-20:auxleft-5]))
+%peakl=auxleft+find(max(obscuttwo([auxleft-20:auxleft-5]))==peaklmax)
+%find(max(obscuttwo([auxleft-20:auxleft-5]))==peaklmax)
+%minl=min(obscuttwo(auxleft-10:auxleft))
+%minlx=find(obscuttwo(auxleft-10:auxleft)==minl)
+%peakllmin=min(obscuttwo(auxleft-10:auxleft-10+peakl))
+%plot(peakl,peaklmax,'+')
 
-peaklmax=max(obscuttwo([auxleft-20:auxleft-5]))
-peakl=auxleft+find(max(obscuttwo([auxleft-20:auxleft-5]))==peaklmax)
-find(max(obscuttwo([auxleft-20:auxleft-5]))==peaklmax)
-minl=min(obscuttwo(auxleft-10:auxleft))
-minlx=find(obscuttwo(auxleft-10:auxleft)==minl)
+%fittin first group of peak
+%max1=find(max(obscuttwo)-0.2<=obscuttwo);%old method
+%plateau=max1(find(abs(find(obscuttwo==max(obscuttwo))-max1)<=10));%old method
+%global M=median(plateau);
+%alpha=find(diff(obscuttwo(M:-1:1))>=0)(1);%old method
+%beta=find(diff(obscuttwo(M:end))>=0)(1);%old method
 
-peakllmin=min(obscuttwo(auxleft-10:auxleft-10+peakl))
-plot(peakl,peaklmax,'+')
-if ((peaklmax<1000)||(peakllmin<50))
-disp("no more on left")
-endif
+global M=find(max(obscuttwo(auxpeak))==obscuttwo)
+Mother=auxpeak(find(abs(auxpeak-M)<=10))
+global xd;
+global yd;
+global xdleft;
+global ydleft;
+%xd(1)=plateau(1);%old method
+xdleft(1)=M(1);
+xdleft(2)=xdleft(1)-1;
+xdleft(3)=xdleft(2)-1;
+xd(1)=Mother(2);
+xd(2)=xd(1)-1;
+xd(3)=xd(2)-1;
+#xd(2)=-find(obscuttwo(M-alpha:M+beta)<=0.95*max(obscuttwo))(1)+M-alpha
+#xd(3)=-find(obscuttwo(M-alpha:M+beta)<=0.85*max(obscuttwo))(1)+M-alpha
+yd(1)=obscuttwo(xd(1))
+yd(2)=obscuttwo(xd(2))
+yd(3)=obscuttwo(xd(3))
+ydleft(1)=obscuttwo(xdleft(1))
+ydleft(2)=obscuttwo(xdleft(2))
+ydleft(3)=obscuttwo(xdleft(3))
+auxleft=xd(1)
 function twopoints=gauss2p(param)
 global xd
 global yd
 global M
-twopoints(1)=log(param(2)/(sqrt(2*pi)*param(1)))-log(yd(1)-param(4))-(M+param(3))^2/(2*param(1)^2)+xd(1)*(param(3)+M)/param(1)^2-xd(1)^2/(2*param(1)^2);
-twopoints(2)=log(param(2)/(sqrt(2*pi)*param(1)))-log(yd(2))-(M+param(3))^2/(2*param(1)^2)+xd(2)*(param(3)+M)/param(1)^2-xd(2)^2/(2*param(1)^2);
-twopoints(3)=log(param(2)/(sqrt(2*pi)*param(1)))-log(yd(3))-(M+param(3))^2/(2*param(1)^2)+xd(3)*(param(3)+M)/param(1)^2-xd(3)^2/(2*param(1)^2);
-twopoints(4)=1e6*max(abs(param(3))-5,0)^4;
-twopoints(5)=1e6*max(abs(param(2)/(2*pi*param(1))^(1/2)*exp(-(xd(1)-(param(1)+param(3))).^2/(2*param(1))^2))-200000,0)^4;
-twopoints(6)=1e6*max(abs(param(4))-5000,0)^4;
+global Mother
+twopoints(1)=log(A(2)/(sqrt(2*pi)*sigma(1)))-log(yd(1)-offset(2))-(Mother(2)+offcenter(2))^2/(2*A(2)^2)+xd(1)*(offcenter(2)+Mother(2))/sigma(2)^2-xd(1)^2/(2*sigma(1)^2)+log(A(1)/(sqrt(2*pi)*sigma(1)))-log(ydleft(1)-offset(1))-(Mother(1)+offcenter(1))^2/(2*sigma(1)^2)+xdleft(1)*(offset(1)+Mother(1))/sigma(1)^2-xdleft(1)^2/(2*sigma(1)^2);
+twopoints(2)=log(A(2)/(sqrt(2*pi)*sigma(1)))-log(yd(2)-offset(2))-(Mother(2)+offcenter(2))^2/(2*A(2)^2)+xd(2)*(offcenter(2)+Mother(2))/sigma(2)^2-xd(2)^2/(2*sigma(1)^2)+log(A(1)/(sqrt(2*pi)*sigma(1)))-log(ydleft(2)-offset(1))-(Mother(1)+offcenter(1))^2/(2*sigma(1)^2)+xdleft(2)*(offset(1)+Mother(1))/sigma(1)^2-xdleft(2)^2/(2*sigma(1)^2);
+twopoints(3)=log(A(2)/(sqrt(2*pi)*sigma(1)))-log(yd(3)-offset(2))-(Mother(2)+offcenter(2))^2/(2*A(2)^2)+xd(3)*(offcenter(2)+Mother(2))/sigma(2)^2-xd(3)^2/(2*sigma(1)^2)+log(A(1)/(sqrt(2*pi)*sigma(1)))-log(ydleft(3)-offset(1))-(Mother(1)+offcenter(1))^2/(2*sigma(1)^2)+xdleft(3)*(offset(1)+Mother(1))/sigma(1)^2-xdleft(3)^2/(2*sigma(1)^2);
+twopoints(4)=1e6*max(abs(offcenter(1))-5,0)^4;
+twopoints(5)=1e6*max(abs(offcenter(2))-5,0)^4;
+twopoints(6)=1e6*max(abs(A(1)/(2*pi*sigma(1))^(1/2)*exp(-(xdleft(1)-(sigma(1)+offcenter(1))).^2/(2*sigma(1))^2))-200000,0)^4;
+twopoints(7)=1e6*max(abs(A(2)/(2*pi*sigma(2))^(1/2)*exp(-(xd(1)-(sigma(2)+offcenter(2))).^2/(2*sigma(2))^2))-200000,0)^4;
+twopoints(8)=1e6*max(abs(offset(1))-5000,0)^4;
+twopoints(9)=1e6*max(abs(offset(2))-5000,0)^4;
 endfunction
 if (strcmpi(onefit,"gauss2points"))
 options.TolFun=10^-40;options.TolX=10^-40;
-[param,info]=fsolve("gauss2p", [1;2*max(obscuttwo);0;100],options)
+%param=@(A,sigma,offcenter,offset)[A; sigma; offcenter; offset];
+[param,info]=fsolve("gauss2p", [2*obscuttwo(Mother)'; [1 1];[0 0];[100 100]],options)
 endif
 
 if (strcmpi(onefit,"gauss"))
